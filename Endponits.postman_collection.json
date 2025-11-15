@@ -1,0 +1,171 @@
+{
+	"info": {
+		"_postman_id": "350a6640-be0d-4b77-90fb-37813f6dca0d",
+		"name": "Endponits",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "37538157"
+	},
+	"item": [
+		{
+			"name": "CrearCliente",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"nombre\": \"Andres Alquinga\",\r\n  \"genero\": \"Masculino\",\r\n  \"edad\": 30,\r\n  \"identificacion\": \"1754126325\",\r\n  \"direccion\": \"san diego\",\r\n  \"telefono\": \"098254785\",\r\n  \"contrasena\": \"12345\",\r\n  \"estado\": true\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8081/api/clientes"
+			},
+			"response": []
+		},
+		{
+			"name": "ActualizarCliente",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": 2,\r\n  \"telefono\": \"098254785\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8081/api/clientes"
+			},
+			"response": []
+		},
+		{
+			"name": "EliminarCliente",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"identificacion\": \"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8081/api/clientes"
+			},
+			"response": []
+		},
+		{
+			"name": "ObtenerCliente",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8081/api/clientes/1754126325"
+			},
+			"response": []
+		},
+		{
+			"name": "ObtenerClientes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"estado\": true,\r\n    \"pageNumber\": 0,\r\n    \"pageSize\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8081/api/clientes/clientes"
+			},
+			"response": []
+		},
+		{
+			"name": "RegistrarCuenta",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"identificacion\": \"1754125258\",\r\n    \"numeroCuenta\": \"12346\",\r\n    \"tipoCuenta\": \"Corriente\",\r\n    \"saldoInicial\": 1000,\r\n    \"estado\": true\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/cuentas"
+			},
+			"response": []
+		},
+		{
+			"name": "ObtenerCuenta",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/cuentas/12345"
+			},
+			"response": []
+		},
+		{
+			"name": "RegistrarMovimiento",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"numeroCuenta\": \"12346\",\r\n    \"tipoMovimiento\": \"Deposito\",\r\n    \"valor\": 200\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/movimientos/registrar-movimiento"
+			},
+			"response": []
+		},
+		{
+			"name": "ObtenerMovimiento",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/movimientos/1"
+			},
+			"response": []
+		},
+		{
+			"name": "Reporte",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8082/api/reportes?fecha=2025-11-14,2025-11-20",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"reportes"
+					],
+					"query": [
+						{
+							"key": "fecha",
+							"value": "2025-11-14,2025-11-20"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

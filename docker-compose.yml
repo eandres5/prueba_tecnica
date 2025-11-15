@@ -1,0 +1,208 @@
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:13
+    container_name: bank-postgres
+    environment:
+      POSTGRES_DB: bank_db
+      POSTGRES_USER: postgresadmin
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - bank-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgresadmin"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ActiveMQ
+  activemq:
+    image: rmohr/activemq:latest
+    container_name: bank-activemq
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    environment:
+      ACTIVEMQ_ADMIN_LOGIN: admin
+      ACTIVEMQ_ADMIN_PASSWORD: admin
+    networks:
+      - bank-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8161"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio de Clientes
+  cliente-service:
+    build:
+      context: ./clientes
+      dockerfile: Dockerfile
+    container_name: cliente-service
+    ports:
+      - "8081:8081"
+    environment:
+      # Server Config
+      SERVER_PORT: 8081
+      SERVER_SERVLET_CONTEXT_PATH: /
+      
+      # Application Config
+      SPRING_APPLICATION_NAME: cliente-service
+      
+      # Database Config
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: clientedb
+      DB_USER: postgresadmin
+      DB_PASSWORD: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clientedb
+      SPRING_DATASOURCE_USERNAME: postgresadmin
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      
+      # HikariCP Config
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 5
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 30000
+      SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: 600000
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: 1800000
+      
+      # JPA Config
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_BATCH_SIZE: 20
+      SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_INSERTS: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_UPDATES: "true"
+      
+      # ActiveMQ Config
+      SPRING_ACTIVEMQ_BROKER_URL: tcp://activemq:61616
+      SPRING_ACTIVEMQ_USER: admin
+      SPRING_ACTIVEMQ_PASSWORD: admin
+      SPRING_JMS_PUB_SUB_DOMAIN: "false"
+      
+      # Logging Config
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_BANK_CLIENTE: DEBUG
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: DEBUG
+      LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL_BASICBINDER: TRACE
+      LOGGING_FILE_NAME: logs/cliente-service.log
+      
+      # Actuator Config
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      MANAGEMENT_HEALTH_RABBITMQ_ENABLED: "true"
+      MANAGEMENT_HEALTH_DB_ENABLED: "true"
+      
+      # Java Options
+      JAVA_OPTS: "-Xmx512m -Xms256m -Dlogging.file.name=/app/logs/cliente-service.log"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy
+    networks:
+      - bank-network
+    restart: unless-stopped
+    volumes:
+      - ./clientes/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Servicio de Cuentas
+  cuenta-service:
+    build:
+      context: ./cuentas
+      dockerfile: Dockerfile
+    container_name: cuenta-service
+    ports:
+      - "8082:8082"
+    environment:
+      # Server Config
+      SERVER_PORT: 8082
+      SERVER_SERVLET_CONTEXT_PATH: /
+      
+      # Application Config
+      SPRING_APPLICATION_NAME: cuentas-service
+      
+      # Database Config
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: cuentasdb
+      DB_USER: postgresadmin
+      DB_PASSWORD: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cuentasdb
+      SPRING_DATASOURCE_USERNAME: postgresadmin
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      
+      # HikariCP Config
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 5
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 30000
+      SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: 600000
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: 1800000
+      
+      # JPA Config
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_BATCH_SIZE: 20
+      SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_INSERTS: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_ORDER_UPDATES: "true"
+      
+      # ActiveMQ Config
+      SPRING_ACTIVEMQ_BROKER_URL: tcp://activemq:61616
+      SPRING_ACTIVEMQ_USER: admin
+      SPRING_ACTIVEMQ_PASSWORD: admin
+      SPRING_JMS_PUB_SUB_DOMAIN: "false"
+      
+      # Logging Config
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_BANK_CLIENTE: DEBUG
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: DEBUG
+      LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL_BASICBINDER: TRACE
+      LOGGING_FILE_NAME: logs/cuentas-service.log
+      
+      # Actuator Config
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      
+      # Java Options
+      JAVA_OPTS: "-Xmx512m -Xms256m -Dlogging.file.name=/app/logs/cuentas-service.log"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy
+    networks:
+      - bank-network
+    restart: unless-stopped
+    volumes:
+      - ./cuentas/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:
+
+networks:
+  bank-network:
+    driver: bridge
